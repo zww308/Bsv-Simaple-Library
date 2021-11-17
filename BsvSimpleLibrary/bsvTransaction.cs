@@ -210,6 +210,7 @@ namespace BsvSimpleLibrary
             //测试网络构造交易结构
             if (networkFlag.Name == bsvConfiguration_class.NbitTestNet)
             {
+                //换回测试网tx的模板
                 tx = ForkIdTransaction.Create(NBitcoin.Altcoins.BCash.Instance.Testnet);
                 if (network != bsvConfiguration_class.testNetwork)
                 {
@@ -242,15 +243,15 @@ namespace BsvSimpleLibrary
 
             // privateKey.GetAddress(ScriptPubKeyType.Legacy).ToString()获取支付地址
             // "v1/bsv/test/address/mjHyPC49GKEp8NsJQXJ1D4zhpCuciJ7bna/unspent"
-            // 获取前一笔交易的out内容{height，outindex，txid,value}
+            // 获取前一笔交易的out内容,确定该地址上未花费的钱{height，outindex，txid,value}
             RestApiUtxo_class[] utxos = RestApi_class.getUtxosByAnAddress(bsvConfiguration_class.RestApiUri, network,
                 privateKey.GetAddress(ScriptPubKeyType.Legacy).ToString());
 
             //构造交易
-            addoutLS(tx, opreturnData, destAddress, changeBackAddress, sendSatoshi, donationSat, network, networkFlag,locktime);
+             addoutLS(tx, opreturnData, destAddress, changeBackAddress, sendSatoshi, donationSat, network, networkFlag,locktime);
             //计算支付后源地址的金额
             long changeBacksats = addinLS(sendSatoshi, tx, utxos, donationSat, feeSatPerByte, scriptPubKey, out txfee,sequence);
-            sign(tx, privateKeyStr, utxos, changeBacksats, scriptPubKey);
+            signNone(tx, privateKeyStr, utxos, changeBacksats, scriptPubKey);
 
             //发送交易
             string responseStr = RestApi_class.sendTransaction(bsvConfiguration_class.RestApiUri, network, tx.ToHex());
@@ -294,6 +295,7 @@ namespace BsvSimpleLibrary
             tx.Outputs.Add(txback);
            
         }
+
         //构造支付通道输入
         static long addinLS(long sendSatoshi, Transaction tx, RestApiUtxo_class[] utxos, long donationSat,
             double feeSatPerByte, Script scriptPubKey, out long fee,uint sequence)
@@ -306,6 +308,7 @@ namespace BsvSimpleLibrary
             {
                 
                 OutPoint outPoint = new OutPoint(uint256.Parse(utxo.TxId), utxo.OutIndex);
+                Console.WriteLine("输入时的："+outPoint);
                 TxIn txin = new TxIn(outPoint);
                 txin.Sequence = sequence;
                 txin.ScriptSig = scriptPubKey;//Script.FromHex(utxo.ScriptPubKey);
@@ -326,14 +329,7 @@ namespace BsvSimpleLibrary
 
 
 
-
-
-
-
-
-
-
-        //其他工具方法
+        //其他工具方法，设置捐款金额
         static long setDonationSatoshi(long donationSatoshi)
         {
             if (donationSatoshi == 0 || donationSatoshi >= 1000)
@@ -436,19 +432,66 @@ namespace BsvSimpleLibrary
             tx.Outputs.Add(txback);
         }
 
-        //签名
+        //SigHashOld、SigHashALL对所有输出签名
         private static void sign(Transaction tx, string privateKeyStr, RestApiUtxo_class[] utxos, long changeBackSatoshi,
             Script scriptPubKey)
         {
             //the change back address must be at last.
+            //集合保存交易输出
             List<Coin> coinList = new List<Coin>();
             foreach (RestApiUtxo_class utxo in utxos)
                 coinList.Add(new Coin(uint256.Parse(utxo.TxId), utxo.OutIndex, new Money(utxo.Value), scriptPubKey));
             BitcoinSecret privateKey = new BitcoinSecret(privateKeyStr);
+            //转成数组
             Coin[] coins = coinList.ToArray();
             tx.Outputs.Last().Value = changeBackSatoshi;
             BitcoinSecret[] privateKeys = { privateKey };
             tx.Sign(privateKeys, coins);
+        }
+
+        //SigHashNone对所有输入签名
+        private static void signNone(Transaction tx, string privateKeyStr, RestApiUtxo_class[] utxos, long changeBackSatoshi,
+           Script scriptPubKey)
+        {
+            //集合保存交易输出
+            List<Coin> coinList = new List<Coin>();
+            //构造输出集合
+            foreach (RestApiUtxo_class utxo in utxos)
+                coinList.Add(new Coin(uint256.Parse(utxo.TxId), utxo.OutIndex, new Money(utxo.Value), scriptPubKey));
+            ISecret privateKey = new BitcoinSecret(privateKeyStr);
+            //转成数组
+           // Coin[] coins = coinList.ToArray();
+            tx.Outputs.Last().Value = changeBackSatoshi;
+            Console.WriteLine(coinList.Count);
+            // BitcoinSecret[] privateKeys = { privateKey };
+            // SigningOptions signingOptions;
+            foreach(ICoin c in coinList)
+            {
+                Console.WriteLine("Outpoint:"+c.Outpoint);
+               
+                tx.SignInput(privateKey, c, SigHash.Single);
+                break;
+                
+            }
+         
+            //for (int i = 0; i < coinList.Count; i++)
+            //{
+            //    Console.WriteLine(coinList.Find(i).Outpoint);
+            //    tx.SignInput(privateKey, coins[i], SigHash.All);
+            //}
+        }
+
+
+        private static void signSingle(Transaction tx, string privateKeyStr, RestApiUtxo_class[] utxos, long changeBackSatoshi,
+           Script scriptPubKey)
+        {
+            Console.WriteLine("signSingle");
+            
+        }
+        private static void signAnyoneCanPay(Transaction tx, string privateKeyStr, RestApiUtxo_class[] utxos, long changeBackSatoshi,
+           Script scriptPubKey)
+        {
+            Console.WriteLine("signAnyoneCanPay");
         }
     }
 }

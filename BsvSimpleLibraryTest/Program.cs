@@ -25,6 +25,11 @@ namespace bsv
         }
         static void Main(string[] args)
         {
+            //int[] numbers = { 5, 4, 1, 3, 6, 9, 5, 7, 0 };
+            //int oldNumbers = numbers.Count();
+            //Console.WriteLine(oldNumbers);
+            //int oldNumbers2 = numbers.Count(n => n % 2 == 1);
+            //Console.WriteLine(oldNumbers2);
             //long s = Program.GetTimeStamp();
             //long b = Program.GetTimeStampTen();
             //Console.WriteLine(s+"\t"+b);
@@ -43,8 +48,8 @@ namespace bsv
 
             //Console.WriteLine(Int32.MaxValue);
 
-            int sq = 1 << 31;
-            Console.WriteLine(sq);//-2147483648
+            //int sq = 1 << 31;
+            //Console.WriteLine(sq);//-2147483648
 
             //Console.WriteLine(sq);
             string destAddress = "mjHyPC49GKEp8NsJQXJ1D4zhpCuciJ7bna";//test            
@@ -67,7 +72,7 @@ namespace bsv
 
             // response = bsvTransaction_class.sendLS(privateKey, 5, network, sendAddress, destAddress, opReturnData, 0.55, 0, 4194306, 1636992342); 69cad8d9c113d9dac75fb54e3fbcf767176801745aac8befc084f6331cdebb2b
 
-            response = bsvTransaction_class.sendLS(privateKey, 5, network, sendAddress, destAddress, opReturnData, 0.55, 0, 6,111);//6300f06eb395527d1081e6e0d1f1b4c43ac5fa2f9e71f94a50825a983f43c86a 55也应该会出块
+            response = bsvTransaction_class.sendLS(privateKey, 5, network, sendAddress, destAddress, opReturnData, 0.55, 0);//6300f06eb395527d1081e6e0d1f1b4c43ac5fa2f9e71f94a50825a983f43c86a 55也应该会出块
 
 
 
