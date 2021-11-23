@@ -11,74 +11,194 @@ using NBitcoin;
 using NBitcoin.Altcoins;
 
 namespace bsv
-{    
-    class Program
+{
+    
+	class Program
     {
-        public static long GetTimeStampTen()
+		internal static OutPoint RandOutpoint()
+		{
+			return new OutPoint(Rand(), 0);
+		}
+
+		internal static uint256 Rand()
+		{
+			return new uint256(RandomUtils.GetBytes(32));
+		}
+
+		private ICoin[] GetCoinSource(Key destination, params Money[] amounts)
+		{
+			if (amounts.Length == 0)
+				amounts = new[] { Money.Parse("100.0") };
+
+			return amounts
+				.Select(a => new Coin(RandOutpoint(), new TxOut(a, destination.PubKey.Hash)))
+				.ToArray();
+		}
+
+		static Network Network = Network.TestNet;
+
+		public void CanBuildAnyoneCanPayTransaction()
+		{
+			//Carla is buying from Alice. Bob is acting as a mediator between Alice and Carla.	var bobKey = new Key();
+			
+			var aliceKey = new BitcoinSecret("cSKfdLTTdFhymeXPTnkTqubmQuTr3fti32G7opa84k6bhodog9Vg").PrivateKey;//任务发布者
+			var bobKey = new BitcoinSecret("cPaCD9vUv8Uh97sgMnFritbE8TGZCXEbZyPZKwmPd9VCaV8SYhBa").PrivateKey;//平台
+			var carlaKey = new BitcoinSecret("cTzy6FrDD7MmzAgaEt8Bk8JVWt1iup3VWsPY5nkPAT3iKZBDMWxj").PrivateKey;//任务解决者
+
+			// Alice + carlaKey 2 of 2 multisig "wallet"
+			var alicecarlaRedeemScript = PayToMultiSigTemplate.Instance.GenerateScriptPubKey(2, new PubKey[] { aliceKey.PubKey, carlaKey.PubKey });
+
+			var txBuilder = Network.CreateTransactionBuilder();
+			var funding = txBuilder
+				.AddCoins(GetCoinSource(aliceKey))
+				.AddKeys(aliceKey)
+				.Send(alicecarlaRedeemScript.Hash, "0.000005")
+				.SetChange(aliceKey.PubKey.Hash)
+				.SendFees(Money.Satoshis(1))
+				.BuildTransaction(true);
+
+			//Assert.True(txBuilder.Verify(funding));
+
+			List<ICoin> aliceBobCoins = new List<ICoin>();
+			aliceBobCoins.Add(new ScriptCoin(funding, funding.Outputs.To(alicecarlaRedeemScript.Hash).First(), alicecarlaRedeemScript));
+
+			// first Bob constructs the TX
+			txBuilder = Network.CreateTransactionBuilder();
+			txBuilder.ShuffleRandom = null;
+#pragma warning disable CS0618 // Type or member is obsolete
+			var unsigned = txBuilder
+				// spend from the Alice+Bob wallet to Carla
+				.AddCoins(aliceBobCoins)
+				.Send(carlaKey.PubKey.Hash, "0.000001")
+				//and Carla pays Alice
+				.Send(aliceKey.PubKey.Hash, "0.000002")
+				.CoverOnly("0.000001")
+#pragma warning restore CS0618 // Type or member is obsolete
+				.SetChange(alicecarlaRedeemScript.Hash)
+				// Bob does not sign anything yet
+				.BuildTransaction(false);
+
+		//	Assert.Equal(3, unsigned.Outputs.Count);
+		//	Assert.True(unsigned.Outputs[2].IsTo(aliceBobRedeemScript.Hash));
+			//Only 0.01 should be covered, not 0.03 so 0.49 goes back to Alice+Bob
+		//	Assert.True(unsigned.Outputs[2].Value == Money.Parse("0.49"));
+
+
+		//	Assert.True(unsigned.Outputs[0].IsTo(carlaKey.PubKey.Hash));
+		//	Assert.True(unsigned.Outputs[0].Value == Money.Parse("0.01"));
+
+		//	Assert.True(unsigned.Outputs[1].IsTo(aliceKey.PubKey.Hash));
+			//Assert.True(unsigned.Outputs[1].Value == Money.Parse("0.02"));
+
+			//Alice signs
+			txBuilder = Network.CreateTransactionBuilder();
+			var aliceSigned = txBuilder
+					.AddCoins(aliceBobCoins)
+					.AddKeys(aliceKey)
+					.SignTransaction(unsigned, SigHash.All | SigHash.AnyoneCanPay);
+
+			var carlaCoins = GetCoinSource(carlaKey, "0.00000001", "0.00000001", "0.00000001", "0.0000001", "0.00000001");
+
+			//Scenario 1 : Carla knows aliceBobCoins so she can calculate how much coin she need to complete the transaction
+			//Carla fills and signs
+			txBuilder = Network.CreateTransactionBuilder();
+			((DefaultCoinSelector)txBuilder.CoinSelector).GroupByScriptPubKey = false;
+			var carlaSigned = txBuilder
+				.AddCoins(aliceBobCoins)
+				.Then()
+				.AddKeys(carlaKey)
+				//Carla should complete 0.02, but with 0.03 of fees, she should have a coins of 0.05
+				.AddCoins(carlaCoins)
+				.ContinueToBuild(aliceSigned)
+				.SendFees("0.00000001")
+				.CoverTheRest()
+				.BuildTransaction(true);
+
+
+			//Bob review and signs
+			txBuilder = Network.CreateTransactionBuilder();
+			var bobSigned = txBuilder
+				.AddCoins(aliceBobCoins)
+				.AddKeys(bobKey)
+				.SignTransaction(carlaSigned);
+
+			txBuilder.AddCoins(carlaCoins);
+			//Assert.True(txBuilder.Verify(bobSigned));
+
+
+			//Scenario 2 : Carla is told by Bob to complete 0.05 BTC
+			//Carla fills and signs
+			txBuilder = Network.CreateTransactionBuilder();
+			((DefaultCoinSelector)txBuilder.CoinSelector).GroupByScriptPubKey = false;
+#pragma warning disable CS0618 // Type or member is obsolete
+			carlaSigned = txBuilder
+				.AddKeys(carlaKey)
+				.AddCoins(carlaCoins.Concat(aliceBobCoins).ToArray())
+				//Carla should complete 0.02, but with 0.03 of fees, she should have a coins of 0.05
+				.ContinueToBuild(aliceSigned)
+				.CoverOnly("0.05")
+#pragma warning restore CS0618 // Type or member is obsolete
+				.BuildTransaction(true);
+
+
+			//Bob review and signs
+			txBuilder = Network.CreateTransactionBuilder();
+			bobSigned = txBuilder
+				.AddCoins(aliceBobCoins)
+				.AddKeys(bobKey)
+				.SignTransaction(carlaSigned);
+
+			txBuilder.AddCoins(carlaCoins);
+		//	Assert.True(txBuilder.Verify(bobSigned));
+		}
+
+		
+
+		static void Main(string[] args)
         {
-            return (DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000000;
-        }
-        public static long GetTimeStamp()
-        {
-            TimeSpan ts = DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0, 0);
-            return Convert.ToInt64(ts.TotalSeconds * 1000);
-        }
-        static void Main(string[] args)
-        {
-            //int[] numbers = { 5, 4, 1, 3, 6, 9, 5, 7, 0 };
-            //int oldNumbers = numbers.Count();
-            //Console.WriteLine(oldNumbers);
-            //int oldNumbers2 = numbers.Count(n => n % 2 == 1);
-            //Console.WriteLine(oldNumbers2);
-            //long s = Program.GetTimeStamp();
-            //long b = Program.GetTimeStampTen();
-            //Console.WriteLine(s+"\t"+b);
+			
 
-            //string privateKeyStr = "sss";
-            //BitcoinSecret privateKey = null;
-            //try { privateKey = new BitcoinSecret(privateKeyStr); }
-            //catch (FormatException e)
-            //{
-            //    Console.WriteLine();
-            //    Console.WriteLine(e.Message);
-
-            //}
-            //Console.WriteLine(privateKey);
-            //Console.WriteLine(UInt32.MaxValue); 
-
-            //Console.WriteLine(Int32.MaxValue);
-
-            //int sq = 1 << 31;
-            //Console.WriteLine(sq);//-2147483648
-
-            //Console.WriteLine(sq);
-            string destAddress = "mjHyPC49GKEp8NsJQXJ1D4zhpCuciJ7bna";//test            
-            string privateKey = "cSKfdLTTdFhymeXPTnkTqubmQuTr3fti32G7opa84k6bhodog9Vg"; //(test) your private key
+			string destAddress = "myXNut61z3g7ThKMTnwai9hfPWuRT2GnzT";//test            
+            string privateKey = "cTNMvkiS25SYNnWHN4WioFW7FKHdWgcLymTo8Y2YWAJPXeu6v8nJ"; //(test) your private key
             //string txid = "d45bdda15e197e068288012f1764fd10cf884f5befcafb7d545af55f9d6e9cf0";
-            string uri = bsvConfiguration_class.RestApiUri;
+           // string uri = bsvConfiguration_class.RestApiUri;
             string network = bsvConfiguration_class.testNetwork;
-            string opReturnData = "zww and ljq love bsv test locktime 0 and 1sat";
-            string sendAddress = "mmzARSDGW94BNBXpAhUpneVA3Lxq1eCEZf";
+            string opReturnData = "This is None in the SigHash";
+            string sendAddress = "mjHyPC49GKEp8NsJQXJ1D4zhpCuciJ7bna";
 
             Dictionary<string, string> response;
 
-            //send bsv and / or write data.
-            //1、response = bsvTransaction_class.sendLS(privateKey, 1, network, sendAddress, destAddress, opReturnData, 0.55, 0, 1, 1637021142);
-            //response = bsvTransaction_class.sendLS(privateKey, 1, network, sendAddress, destAddress, opReturnData, 0.55, 0, 2, 1637021142);be150d489834ab45c2f4a44a17f631ddd4c230e498bf39d6027438c64f96c071
-            // response = bsvTransaction_class.sendLS(privateKey, 3, network, sendAddress, destAddress, opReturnData, 0.55, 0, 3, 1637021142); 5622384701cb7ad5c89fde3258c01dbbca4df157d306417666b6320b8177ceff
-            //response = bsvTransaction_class.sendLS(privateKey, 3, network, sendAddress, destAddress, opReturnData, 0.55, 0, 4, 1637021142);
-            // response = bsvTransaction_class.sendLS(privateKey, 5, network, sendAddress, destAddress, opReturnData, 0.55, 0, 5, 1637021142); ed6e44f92284468b54aab5e41527922e7cb2eaa2a88a36095b383169f0a43da5
 
+            //本来是1100支付的金额，为验证最终性，改为1111；第一笔c7ec32bac33e6ae998af39c0f601d9b4894cb978ac836de1e8b577b065a0da2a；第二笔8dc186dfa22f6b8dae0ab6b512c8c7bfe0f203a0fdff062fc3bffe51f20a44c0
+            response = bsvTransaction_class.sendLS(privateKey, 10, network, sendAddress, destAddress, opReturnData, 0.55,0, 4294967295, 0);//518e7aff4ad71bca60f21f7bcb5472ac95b2f9234b0a33fa413633201d534fda 55也应该会出块
 
-            // response = bsvTransaction_class.sendLS(privateKey, 5, network, sendAddress, destAddress, opReturnData, 0.55, 0, 4194306, 1636992342); 69cad8d9c113d9dac75fb54e3fbcf767176801745aac8befc084f6331cdebb2b
-
-            response = bsvTransaction_class.sendLS(privateKey, 5, network, sendAddress, destAddress, opReturnData, 0.55, 0);//6300f06eb395527d1081e6e0d1f1b4c43ac5fa2f9e71f94a50825a983f43c86a 55也应该会出块
+		
 
 
 
+            //BitcoinSecret privateKey1;
+            //privateKey1 = new BitcoinSecret(privateKey);
+            //var a = privateKey1.PubKey.ScriptPubKey;
+            //var b = privateKey1.GetAddress(ScriptPubKeyType.Legacy);
+            //Console.WriteLine(a);
+            //Console.WriteLine(b);
+            //Console.WriteLine(destAddress);
+            //BitcoinAddress destAddress1 = null;
+            //if (destAddress != null)
+            //    destAddress1 = BitcoinAddress.Create(destAddress, privateKey1.Network);
+            //var a = destAddress1.ScriptPubKey;
+
+            ////生成输出锁定脚本
+            //Script scriptPubKey = privateKey1.GetAddress(ScriptPubKeyType.Legacy).ScriptPubKey;
+            //Console.WriteLine(scriptPubKey.ToString());
+            //Console.WriteLine(a);
 
 
 
+
+
+
+            //     Console.WriteLine("Hello World! " + new Key().GetWif(Network.Main));
 
 
 

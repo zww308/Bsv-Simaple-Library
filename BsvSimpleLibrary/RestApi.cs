@@ -69,10 +69,12 @@ namespace BsvSimpleLibrary
         //}
         public static RestApiUtxo_class[] getUtxosByAnAddress(string uri, string network, string addr)
         {
+            //bsvConfiguration_class.getUtxosByAnAddress 获取这个地址上的UTXO（被锁定的交易）
             Task<string> TaskResponseData = RestApiGetFunction(uri, network, bsvConfiguration_class.getUtxosByAnAddress, addr);
             string responseData = TaskResponseData.Result;
             try
             {
+                //将UTXO的数据转成json格式且是RestApiUtxo_class类型，包含该笔交易在哪个区块高度，交易输出的第几个位置，交易id，UTXO的余额（height，outindex，value，txid）
                 RestApiUtxo_class[] utxos = JsonConvert.DeserializeObject<RestApiUtxo_class[]>(responseData);
                 Console.WriteLine();
                 Console.WriteLine("utxos length:" + utxos.Length);
@@ -160,6 +162,14 @@ namespace BsvSimpleLibrary
             return (s);
         }
 
+       /// <summary>
+       /// 获取此地址上的UTXO
+       /// </summary>
+       /// <param name="uri"></param>whatsonchain网站基本url
+       /// <param name="network"></param>哪个网络
+       /// <param name="FunctionString"></param>whatsonchain功能具体url
+       /// <param name="iterm"></param>支付地址
+       /// <returns></returns>
         async static Task<string> RestApiGetFunction(string uri, string network, string FunctionString, string iterm)
         {
             //Common testing requirement. If you are consuming an API in a sandbox/test region, uncomment this line of code ONLY for non production uses.
@@ -169,8 +179,8 @@ namespace BsvSimpleLibrary
             using (var httpClient = new HttpClient()) //{ BaseAddress = baseAddress })
             {
                 httpClient.BaseAddress = new Uri(uri);
-                httpClient.DefaultRequestHeaders.TryAddWithoutValidation("accept", "application/json");
-                string uristr = string.Format(FunctionString, network, iterm);
+                httpClient.DefaultRequestHeaders.TryAddWithoutValidation("accept", "application/json");//让客户端接受的返还类型为json
+                string uristr = string.Format(FunctionString, network, iterm);//拼接成uri格式
                 using (var response = await httpClient.GetAsync(uristr))
                 {
                     responseData = await response.Content.ReadAsStringAsync();
