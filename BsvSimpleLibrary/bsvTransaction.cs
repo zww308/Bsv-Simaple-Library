@@ -14,26 +14,26 @@ namespace BsvSimpleLibrary
     {
 
 
-        ////[DllImport("KERNEL32")]
-        ////static extern bool QueryPerformanceCounter(out long lpPerformanceCount);
-        ///// <summary>
-        ///// Send bsv satoshis to an address from an address and/or write/read data to/from BSV blockchain. 
-        ///// If changeBackAddress is null, the sending address would be set as default changeBackAddress.. 
-        ///// The fee would be set to 1.0x Sat/B automatically. 
-        ///// Set the "donationSatoshi" =0 if do not donate.  
-        ///// If success, return the txid; else return error information. 
-        ///// </summary>
-        ///// <param name="privateKeyStr"></param>
-        ///// <param name="sendSatoshi"></param>
-        ///// <param name="network"></param>
-        ///// <param name="destAddress"></param>
-        ///// <param name="changeBackAddress">If changeBackAddress is null, it would be set to the sending address automatically. </param>
-        ///// <param name="opreturnData">If opreturnData is not null, the data would be write to the blockchain.</param>
-        ///// <param name="feeSatPerByte">fee rate is represented by Satoshis per Byte</param>
-        ///// <param name="donationSatoshi">Set the "donationSatoshi" parameter = 0 if do not donate. 
-        ///// It does not donate everytiem if donationSatoshi is greater than 0 and less than 1000.
-        ///// The average donation fee is the set value.</param>
-        ///// <returns>If success, return the txid; else return error information</returns>
+        //[DllImport("KERNEL32")]
+        //static extern bool QueryPerformanceCounter(out long lpPerformanceCount);
+        /// <summary>
+        /// Send bsv satoshis to an address from an address and/or write/read data to/from BSV blockchain.
+        /// If changeBackAddress is null, the sending address would be set as default changeBackAddress..
+        /// The fee would be set to 1.0x Sat/B automatically.
+        /// Set the "donationSatoshi" =0 if do not donate.  
+        /// If success, return the txid; else return error information.
+        /// </summary>
+        /// <param name = "privateKeyStr" ></ param >
+        /// < param name= "sendSatoshi" ></ param >
+        /// < param name= "network" ></ param >
+        /// < param name= "destAddress" ></ param >
+        /// < param name= "changeBackAddress" > If changeBackAddress is null, it would be set to the sending address automatically. </param>
+        /// <param name = "opreturnData" > If opreturnData is not null, the data would be write to the blockchain.</param>
+        /// <param name = "feeSatPerByte" > fee rate is represented by Satoshis per Byte</param>
+        /// <param name = "donationSatoshi" > Set the "donationSatoshi" parameter = 0 if do not donate. 
+        /// It does not donate everytiem if donationSatoshi is greater than 0 and less than 1000.
+        /// The average donation fee is the set value.</param>
+        /// <returns>If success, return the txid; else return error information</returns>
         //public static Dictionary<string, string> send(string privateKeyStr, long sendSatoshi, string network,
         //    string destAddressStr = null, string changeBackAddressStr = null,
         //    string opreturnData = null, double feeSatPerByte = 1, long donationSatoshi = 100)
@@ -48,27 +48,27 @@ namespace BsvSimpleLibrary
         //    return (response);
         //}
 
-        ///// <summary>
-        ///// Send bsv satoshis to an address from an address and/or write/read data to/from BSV blockchain. 
-        ///// If changeBackAddress is null, the sending address would be set as default changeBackAddress.. 
-        ///// The fee would be set to 1.0x Sat/B automatically. 
-        ///// Set the "donationSatoshi" =0 if do not donate.  
-        ///// If success, return the txid; else return error information. 
-        ///// </summary>
-        ///// <param name="privateKeyStr"></param>
-        ///// <param name="sendSatoshi"></param>
-        ///// <param name="network"></param>
-        ///// <param name="tx">nbitcoin transaction. pass the sent tx out</param>
-        ///// <param name="txfee">tx fee. satoshi.</param>
-        ///// <param name="donationFee">donated satoshis in the tx.</param>
-        ///// <param name="destAddress"></param>
-        ///// <param name="changeBackAddress">If changeBackAddress is null, it would be set to the sending address automatically. </param>
-        ///// <param name="opreturnData">If opreturnData is not null, the data would be write to the blockchain.</param>
-        ///// <param name="feeSatPerByte">fee rate is represented by Satoshis per Byte</param>
-        ///// <param name="donationSatoshi">Set the "donationSatoshi" parameter = 0 if do not donate. 
-        ///// It does not donate everytiem if donationSatoshi is greater than 0 and less than 1000.
-        ///// The average donation fee is the set value.</param>
-        ///// <returns>If success, return the txid; else return error information</returns>
+        /// <summary>
+        /// Send bsv satoshis to an address from an address and/or write/read data to/from BSV blockchain.
+        /// If changeBackAddress is null, the sending address would be set as default changeBackAddress..
+        /// The fee would be set to 1.0x Sat/B automatically.
+        /// Set the "donationSatoshi" =0 if do not donate.  
+        /// If success, return the txid; else return error information.
+        /// </summary>
+        /// <param name = "privateKeyStr" ></ param >
+        /// < param name= "sendSatoshi" ></ param >
+        /// < param name= "network" ></ param >
+        /// < param name= "tx" > nbitcoin transaction.pass the sent tx out</param>
+        /// <param name = "txfee" > tx fee.satoshi.</param>
+        /// <param name = "donationFee" > donated satoshis in the tx.</param>
+        /// <param name = "destAddress" ></ param >
+        /// < param name= "changeBackAddress" > If changeBackAddress is null, it would be set to the sending address automatically. </param>
+        /// <param name = "opreturnData" > If opreturnData is not null, the data would be write to the blockchain.</param>
+        /// <param name = "feeSatPerByte" > fee rate is represented by Satoshis per Byte</param>
+        /// <param name = "donationSatoshi" > Set the "donationSatoshi" parameter = 0 if do not donate. 
+        /// It does not donate everytiem if donationSatoshi is greater than 0 and less than 1000.
+        /// The average donation fee is the set value.</param>
+        /// <returns>If success, return the txid; else return error information</returns>
         //public static Dictionary<string, string> send(string privateKeyStr, long sendSatoshi, string network,
         //    out Transaction tx, out long txfee, out long donationFee, string destAddressStr = null, string changeBackAddressStr = null,
         //    string opreturnData = null, double feeSatPerByte = 1, long donationSatoshi = 100)
@@ -78,7 +78,7 @@ namespace BsvSimpleLibrary
         //    Dictionary<string, string> response = new Dictionary<string, string>();
         //    long donationSat = setDonationSatoshi(donationSatoshi);
         //    donationFee = donationSat;
-        //    ///////////////////////////
+        //    /////////////////////////
         //    BitcoinSecret privateKey = null;
         //    try { privateKey = new BitcoinSecret(privateKeyStr); }
         //    catch (FormatException e)
@@ -105,7 +105,7 @@ namespace BsvSimpleLibrary
         //        changeBackAddress = privateKey.GetAddress(ScriptPubKeyType.Legacy);
         //    else
         //        changeBackAddress = BitcoinAddress.Create(changeBackAddressStr, networkFlag);
-        //    ////////////////////////////////////////
+        //    //////////////////////////////////////
         //    if (networkFlag.Name == bsvConfiguration_class.NbitTestNet)
         //    {
         //        tx = ForkIdTransaction.Create(NBitcoin.Altcoins.BCash.Instance.Testnet);
@@ -133,11 +133,11 @@ namespace BsvSimpleLibrary
         //        }
         //    }
         //    Script scriptPubKey = privateKey.GetAddress(ScriptPubKeyType.Legacy).ScriptPubKey;
-        //    ////////////////////////////
+        //    //////////////////////////
         //    RestApiUtxo_class[] utxos = RestApi_class.getUtxosByAnAddress(bsvConfiguration_class.RestApiUri, network,
         //        privateKey.GetAddress(ScriptPubKeyType.Legacy).ToString());
         //    addout(tx, opreturnData, destAddress, changeBackAddress, sendSatoshi, donationSat, network, networkFlag);
-        //    //计算支付后源地址的金额
+        //    计算支付后源地址的金额
         //    long changeBacksats = addin(sendSatoshi, tx, utxos, donationSat, feeSatPerByte, scriptPubKey, out txfee);
         //    sign(tx, privateKeyStr, utxos, changeBacksats, scriptPubKey);
         //    string responseStr = RestApi_class.sendTransaction(bsvConfiguration_class.RestApiUri, network, tx.ToHex());
@@ -145,103 +145,8 @@ namespace BsvSimpleLibrary
         //    return (response);
         //}
 
+
        
-        public static Dictionary<string, string> sendLSNone(string privateKeyStr, long sendSatoshi, string network,
-           string destAddressStr = null, string changeBackAddressStr = null,
-           string opreturnData = null, double feeSatPerByte = 0.55, uint sequence = 4294967295, int locktime = 0)
-        {
-
-            Transaction tx = null;
-            long txfee = 0;
-           
-            Dictionary<string, string> response = sendLSNone(privateKeyStr, sendSatoshi, network,
-                out tx, out txfee
-               , destAddressStr, changeBackAddressStr, opreturnData,
-                feeSatPerByte, sequence, locktime);
-            return (response);
-        }
-        private static Dictionary<string, string> sendLSNone(string privateKeyStr, long sendSatoshi, string network,
-         out Transaction tx, out long txfee, string destAddressStr = null,
-         string changeBackAddressStr = null, string opreturnData = null, double feeSatPerByte = 0.55,
-         uint sequence = 4294967295, int locktime = 0)
-        {
-            //tx = null;
-            txfee = 0;
-            Dictionary<string, string> response = new Dictionary<string, string>();
-
-
-
-            BitcoinSecret privateKey = new BitcoinSecret(privateKeyStr);
-            Script scriptPubKey = privateKey.GetAddress(ScriptPubKeyType.Legacy).ScriptPubKey;
-            Network networkFlag = privateKey.Network;//获取网络对象
-            BitcoinAddress destAddress = BitcoinAddress.Create(destAddressStr, networkFlag);
-            BitcoinAddress changeBackAddress = BitcoinAddress.Create(changeBackAddressStr, networkFlag);
-            var txBuilder = networkFlag.CreateTransactionBuilder();//transactionbuilder对象
-
-            tx = ForkIdTransaction.Create(NBitcoin.Altcoins.BCash.Instance.Testnet);
-
-            RestApiUtxo_class[] utxos = RestApi_class.getUtxosByAnAddress(bsvConfiguration_class.RestApiUri, network,
-               privateKey.GetAddress(ScriptPubKeyType.Legacy).ToString());
-            long satsInTxInputs = 0;
-            long neededSatoshi = sendSatoshi;
-            List<Coin> coinList = new List<Coin>();
-            OutPoint outPoint = null;
-                    
-            //输出构造
-            if (destAddress != null)
-            {
-                //构建输出的锁定脚本ScriptPubKey和UTXO余额
-                TxOut txout = new TxOut(new Money(sendSatoshi), destAddress.ScriptPubKey);
-                tx.Outputs.Add(txout);       
-            }
-            TxOut txback = new TxOut(new Money(Money.Zero), changeBackAddress.ScriptPubKey);
-
-            //构造输入
-            foreach (RestApiUtxo_class utxo in utxos)
-            {
-                //outpoint=txid+index，一笔交易的UTXO所在的第几个索引
-                outPoint = new OutPoint(uint256.Parse(utxo.TxId), utxo.OutIndex);
-
-                TxIn txin = new TxIn(outPoint);
-
-                txin.ScriptSig = scriptPubKey;//Script.FromHex(utxo.ScriptPubKey);
-                //添加sequence
-                tx.Inputs.Add(txin);
-                satsInTxInputs += utxo.Value;
-                txfee = getTxFee(tx, feeSatPerByte);
-                neededSatoshi += txfee;
-                //  fee = getTxFee(tx, feeSatPerByte);
-                //   neededSatoshi += fee;
-                //支付地址余额大于所有所需金额，就说明这笔UTXO够花，跳出UTXO的遍历
-                if (satsInTxInputs >= neededSatoshi)
-                    break;
-            }
-            tx.Outputs.Last().Value = satsInTxInputs - sendSatoshi - txfee;
-            Console.WriteLine("fee : {0}", txfee);
-
-
-            //tx.Outputs.Add(txback);
-            //List<ICoin> coinList1 = new List<ICoin>();
-            //coinList1.Add(new ScriptCoin(tx, tx.Outputs.To(scriptPubKey.Hash).First(), scriptPubKey));
-            //var aliceSigned = txBuilder
-            //        .AddCoins(coinList1)
-            //        .AddKeys(privateKey)
-            //        .SignTransaction(tx, SigHash.All | SigHash.AnyoneCanPay);
-
-            foreach (RestApiUtxo_class utxo in utxos)
-                coinList.Add(new Coin(uint256.Parse(utxo.TxId), utxo.OutIndex, new Money(utxo.Value), scriptPubKey));
-
-            //转成数组
-            Coin[] coins = coinList.ToArray();
-
-            txBuilder.AddKeys(privateKey);
-            txBuilder.AddCoins(coins);
-             txBuilder.SignTransactionInPlace(tx,SigHash.None|SigHash.AnyoneCanPay);
-           
-            string responseStr = RestApi_class.sendTransaction(bsvConfiguration_class.RestApiUri, network, tx.ToHex());
-            response.Add("send info", responseStr);
-            return (response);
-        }
 
 
 
@@ -254,8 +159,8 @@ namespace BsvSimpleLibrary
         /// <param name="privateKeyStr"></param>
         /// <param name="sendSatoshi"></param>
         /// <param name="network"></param>
-        /// <param name="destAddressStr"></param>
-        /// <param name="changeBackAddressStr"></param>
+        /// <param name="destAddressStr"></param>支付地址
+        /// <param name="changeBackAddressStr"></param>接收地址
         /// <param name="opreturnData"></param>
         /// <param name="feeSatPerByte"></param>
         /// <param name="donationSatoshi"></param>
@@ -276,7 +181,7 @@ namespace BsvSimpleLibrary
             return (response);
         }
 
-        //前面的函数调用它进行支付
+        //前面的函数调用它进行支付 destAddressStr找零地址 changeBackAddressStr支付地址
         private static Dictionary<string, string> sendLS( string privateKeyStr, long sendSatoshi, string network,
             out Transaction tx, out long txfee, out long donationFee, string destAddressStr = null,
             string changeBackAddressStr = null, string opreturnData = null, double feeSatPerByte = 0.55,
@@ -302,7 +207,7 @@ namespace BsvSimpleLibrary
                 response.Add("Error", e.Message);
                 return (response);
             }
-            //支付地址为空时且支付金额不为0时，这笔交易没有意义，报错
+            //找零地址为空时且支付金额不为0时，这笔交易没有意义，报错
             if (destAddressStr == null && sendSatoshi > 0)
             {
                 string err = " the destAddress is null, but the sendSatoshi is not 0";
@@ -372,6 +277,13 @@ namespace BsvSimpleLibrary
             //sign(tx, privateKeyStr, utxos, changeBacksats, scriptPubKey);
             //发送交易
             string responseStr = RestApi_class.sendTransaction(bsvConfiguration_class.RestApiUri, network, tx.ToHex());
+
+            Console.WriteLine();
+
+            Console.WriteLine("\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\");
+
+            Console.WriteLine(tx.ToString());
+            Console.WriteLine(tx.ToHex());
             response.Add("send info", responseStr);
             return (response);
         }
@@ -637,17 +549,6 @@ namespace BsvSimpleLibrary
         }
 
 
-        private static void signSingle(Transaction tx, string privateKeyStr, RestApiUtxo_class[] utxos, long changeBackSatoshi,
-           Script scriptPubKey)
-        {
-            Console.WriteLine("signSingle");
-            
-        }
-        private static void signAnyoneCanPay(Transaction tx, string privateKeyStr, RestApiUtxo_class[] utxos, long changeBackSatoshi,
-           Script scriptPubKey)
-        {
-            Console.WriteLine("signAnyoneCanPay");
-        }
 
         
     }

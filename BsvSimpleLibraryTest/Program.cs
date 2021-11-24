@@ -22,47 +22,44 @@ namespace bsv
         {
 			
 
-			string destAddress = "myXNut61z3g7ThKMTnwai9hfPWuRT2GnzT";//test            
-            string privateKey = "cTNMvkiS25SYNnWHN4WioFW7FKHdWgcLymTo8Y2YWAJPXeu6v8nJ"; //(test) your private key
+			string destAddress = "mxiAKEx1dypwufG9DA43zDU5fgiQSJhQP5";//test            
+            string privateKey = "cPz4UxtK7uNSr8yQpYupzAyJ3QQhqDQvHetVvyVbYw4ySkzEr987"; //(test) your private key
             //string txid = "d45bdda15e197e068288012f1764fd10cf884f5befcafb7d545af55f9d6e9cf0";
            // string uri = bsvConfiguration_class.RestApiUri;
             string network = bsvConfiguration_class.testNetwork;
-            string opReturnData = "This is None in the SigHash";
-            string sendAddress = "mjHyPC49GKEp8NsJQXJ1D4zhpCuciJ7bna";
+            string opReturnData = null;
+            string sendAddress = "myXNut61z3g7ThKMTnwai9hfPWuRT2GnzT";
 
             Dictionary<string, string> response;
 
 
             //本来是1100支付的金额，为验证最终性，改为1111；第一笔c7ec32bac33e6ae998af39c0f601d9b4894cb978ac836de1e8b577b065a0da2a；第二笔8dc186dfa22f6b8dae0ab6b512c8c7bfe0f203a0fdff062fc3bffe51f20a44c0
-            response = bsvTransaction_class.sendLS(privateKey, 10, network, sendAddress, destAddress, opReturnData, 0.55,0, 4294967295, 0);//518e7aff4ad71bca60f21f7bcb5472ac95b2f9234b0a33fa413633201d534fda 55也应该会出块
-
-		
+            // response = bsvTransaction_class.sendLS(privateKey, 1000, network, sendAddress, destAddress, opReturnData, 0.55, 0, 4294967295, 0);//518e7aff4ad71bca60f21f7bcb5472ac95b2f9234b0a33fa413633201d534fda 55也应该会出块
 
 
+            Payment_class py0 = new Payment_class(privateKey, destAddress, 1000, sendAddress, opReturnData, 4294967295, 0);
+            //Console.WriteLine(py0.ToString());
 
-            //BitcoinSecret privateKey1;
-            //privateKey1 = new BitcoinSecret(privateKey);
-            //var a = privateKey1.PubKey.ScriptPubKey;
-            //var b = privateKey1.GetAddress(ScriptPubKeyType.Legacy);
-            //Console.WriteLine(a);
-            //Console.WriteLine(b);
-            //Console.WriteLine(destAddress);
-            //BitcoinAddress destAddress1 = null;
-            //if (destAddress != null)
-            //    destAddress1 = BitcoinAddress.Create(destAddress, privateKey1.Network);
-            //var a = destAddress1.ScriptPubKey;
-
-            ////生成输出锁定脚本
-            //Script scriptPubKey = privateKey1.GetAddress(ScriptPubKeyType.Legacy).ScriptPubKey;
-            //Console.WriteLine(scriptPubKey.ToString());
-            //Console.WriteLine(a);
+            //Payment_class py1 = new Payment_class("cUDiEpzuT7UXbCFTLH3C1s3Fem2qtEjyWNdmWYtArZYjwVpj7tox", "mnGFUPfCEoLVVsxuKHiAE281nS4DoZLQ5n",
+            //    202, "myXNut61z3g7ThKMTnwai9hfPWuRT2GnzT",
+            //    "myX to mnG", 4294967295, 0);
+            //Payment_class py2 = new Payment_class("cQ5VWGtXKnpFkV8RS2h9J1PySExQgzRV6b6o7BSsEMgwdv72YQv9", "mgfzsnLQvXk5dx5rTow8ZC5yN3CNpowp9p",
+            //   112, "mnGFUPfCEoLVVsxuKHiAE281nS4DoZLQ5n",
+            //   "myX to mnG", 4294967295, 0);
+            List<Payment_class> paylist = new List<Payment_class>();
+            paylist.Add(py0);
+            //paylist.Add(py1);
+            //paylist.Add(py2);
+            response = bsvarrTransaction_class.sendpay(paylist, network, 0.5);
 
 
 
 
 
 
-            //     Console.WriteLine("Hello World! " + new Key().GetWif(Network.Main));
+
+
+
 
 
 
