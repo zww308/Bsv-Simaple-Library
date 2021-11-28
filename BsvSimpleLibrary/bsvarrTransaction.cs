@@ -34,6 +34,8 @@ namespace BsvSimpleLibrary
             BitcoinSecret privateKey = null;
             BitcoinAddress destAddress = null;
             BitcoinAddress changeBackAddress = null;
+            List<Script> Scriptlist = new List<Script>();
+            //从paylist中获取单个支付
             foreach (Payment_class pay in paylist)
             {
                 string privatekeystr = pay.privatekeyStr;               
@@ -51,15 +53,17 @@ namespace BsvSimpleLibrary
                     changeBackAddress = BitcoinAddress.Create(pay.payAddressStr, networkFlag);
 
                 Script scriptPubKey = privateKey.GetAddress(ScriptPubKeyType.Legacy).ScriptPubKey;
-               
+                Scriptlist.Add(scriptPubKey);
+
                 //构造交易中的输出
                 addoutLS(tx, pay.opreturnData, destAddress, changeBackAddress, pay.sendSatoshi, network, networkFlag, pay.locktime);
                
             }
-            long[] chageBackarr = new long[3];
+            long[] chageBackarr = new long[paylist.Count];
             int i = 0;
             Dictionary<BitcoinSecret, List<RestApiUtxo_class>> utxosDic = new Dictionary<BitcoinSecret, List<RestApiUtxo_class>>();
             
+            //获取每一笔私钥对应的UTXO
             foreach (Payment_class pay in paylist) {
                
                 List<RestApiUtxo_class> utxoslist = null;              
@@ -70,8 +74,17 @@ namespace BsvSimpleLibrary
                 utxosDic.Add(privateKey, utxoslist);
                
                 Script scriptPubKey = privateKey.GetAddress(ScriptPubKeyType.Legacy).ScriptPubKey;
+                long changeBacksats = 0;
                 //计算支付地址支付后的余额
-                long changeBacksats = addinLS(pay.sendSatoshi, tx, utxos, feeSatPerByte, scriptPubKey, out txfee, pay.sequence);
+                if ((paylist.Count - 1) == i)
+                {
+                    changeBacksats = addinLSfee(pay.sendSatoshi, tx, utxos, feeSatPerByte, scriptPubKey, out txfee, pay.sequence);
+                }
+                else
+                {
+                    changeBacksats = addinLS(pay.sendSatoshi, tx, utxos, feeSatPerByte, scriptPubKey, pay.sequence);
+                }
+                //   long changeBacksats = addinLSfee(pay.sendSatoshi, tx, utxos, feeSatPerByte, scriptPubKey, out txfee, pay.sequence);
                 chageBackarr[i++] = changeBacksats;
             }
             sign(tx,  utxosDic, chageBackarr);
@@ -122,8 +135,8 @@ namespace BsvSimpleLibrary
             tx.Outputs.Add(txback);
         }
 
-        //构建交易输入
-        private static long addinLS(long sendSatoshi, Transaction tx,
+        //最后一个地址支付费用，构建交易输入
+        private static long addinLSfee(long sendSatoshi, Transaction tx,
             RestApiUtxo_class[] utxos, double feeSatPerByte,
             Script scriptPubKey, out long txfee, uint sequence)
         {
@@ -142,8 +155,10 @@ namespace BsvSimpleLibrary
                 //添加sequence
                 tx.Inputs.Add(txin);
                 satsInTxInputs += utxo.Value;
+                //
                 txfee = getTxFee(tx, feeSatPerByte);
                 neededSatoshi += txfee;
+                //
                 //支付地址余额大于所有所需金额，就说明这笔UTXO够花，跳出UTXO的遍历
                 if (satsInTxInputs >= neededSatoshi)
                     break;
@@ -154,6 +169,40 @@ namespace BsvSimpleLibrary
             return (changBackSatoshi);
         }
 
+        private static long addinLS(long sendSatoshi, Transaction tx,
+           RestApiUtxo_class[] utxos, double feeSatPerByte,
+           Script scriptPubKey,  uint sequence)
+        {
+            long satsInTxInputs = 0;//输入结构中的余额
+            long neededSatoshi = sendSatoshi;
+           // txfee = 0;
+            Sequence sq = (Sequence)sequence;
+            foreach (RestApiUtxo_class utxo in utxos)
+            {
+                //outpoint=txid+index，一笔交易的UTXO所在的第几个索引
+                OutPoint outPoint = new OutPoint(uint256.Parse(utxo.TxId), utxo.OutIndex);
+                Console.WriteLine("输入时的：" + outPoint);
+                TxIn txin = new TxIn(outPoint);
+                txin.Sequence = sequence;
+                txin.ScriptSig = scriptPubKey;//Script.FromHex(utxo.ScriptPubKey);
+                //添加sequence
+                tx.Inputs.Add(txin);
+                satsInTxInputs += utxo.Value;
+                //
+              //  txfee = getTxFee(tx, feeSatPerByte);
+            //    neededSatoshi += txfee;
+                //
+                //支付地址余额大于所有所需金额，就说明这笔UTXO够花，跳出UTXO的遍历
+                if (satsInTxInputs >= neededSatoshi)
+                    break;
+            }
+            long changBackSatoshi = satsInTxInputs - sendSatoshi ;//找零
+          //  Console.WriteLine();
+          //  Console.WriteLine("fee : {0}", txfee);
+            return (changBackSatoshi);
+        }
+
+
         //获取这一笔交易所花费的矿工费用
         private static long getTxFee(Transaction tx, double feeSatPerByte)
         {
@@ -162,9 +211,57 @@ namespace BsvSimpleLibrary
             return (fee);
         }
 
+
+
+        //对交易签名
+        private static void sign(Transaction tx, Dictionary<BitcoinSecret, List<RestApiUtxo_class>> utxosDic, long[] chageBacklist)
+        {
+            foreach(var change in chageBacklist)
+            {
+                Console.WriteLine(change);
+            }
+            //集合保存交易输出
+            List<Coin> coinList = new List<Coin>();
+            int i = 0;
+           // int j = 0 ;
+            Network networkFlag = null;
+            List<BitcoinSecret> privateKeys = new List<BitcoinSecret>();
+            foreach (KeyValuePair<BitcoinSecret, List<RestApiUtxo_class>> kvp in utxosDic)
+            {
+                BitcoinSecret privatekey = kvp.Key;
+                privateKeys.Add(privatekey);
+                networkFlag = privatekey.Network;
+                List<RestApiUtxo_class> utxos = kvp.Value;
+                Script scriptPubKey = privatekey.GetAddress(ScriptPubKeyType.Legacy).ScriptPubKey;
+                foreach (RestApiUtxo_class utxo in utxos)
+                    coinList.Add(new Coin(uint256.Parse(utxo.TxId), utxo.OutIndex, new Money(utxo.Value), scriptPubKey));
+                var outlist = tx.Outputs;
+
+                Console.WriteLine(scriptPubKey);
+                for (int j = 0; j < outlist.Count; j++)
+                    {                       
+                        Console.WriteLine(outlist[j].ScriptPubKey);
+                        if (scriptPubKey == outlist[j].ScriptPubKey && outlist[j].Value==Money.Zero)
+                        {
+                            outlist[j].Value = chageBacklist[i++];                         
+                            break;
+                        }                                     
+                
+                    }
+              //  tx.Outputs.Last().Value = chageBacklist[i++];
+            }
+            Coin[] coins = coinList.ToArray();
+            BitcoinSecret[] privatearr = privateKeys.ToArray();
+            var txBuilder = networkFlag.CreateTransactionBuilder();//transactionbuilder对象
+            txBuilder.AddKeys(privatearr);
+            txBuilder.AddCoins(coins);
+            txBuilder.SignTransactionInPlace(tx, SigHash.Single | SigHash.AnyoneCanPay);
+        }
+
+
         //对交易签名
         private static void sign(Transaction tx, string privateKeyStr, RestApiUtxo_class[] utxos, long changeBackSatoshi,
-           Script scriptPubKey, Network networkFlag)
+              Script scriptPubKey, Network networkFlag)
         {
             //集合保存交易输出
             List<Coin> coinList = new List<Coin>();
@@ -182,36 +279,9 @@ namespace BsvSimpleLibrary
             //txBuilder.SignTransactionInPlace(tx, SigHash.All);
             //txBuilder.SignTransactionInPlace(tx, SigHash.None);
             txBuilder.SignTransactionInPlace(tx, SigHash.All | SigHash.AnyoneCanPay);
-            // txBuilder.SignTransactionInPlace(tx, SigHash.None | SigHash.AnyoneCanPay);
+            // txBuilder.SignTransactionInPlace(tx, SigHash.None | SigHash.AnyoneCanPay); 
             //txBuilder.SignTransactionInPlace(tx, SigHash.Single);
             //txBuilder.SignTransactionInPlace(tx, SigHash.Single | SigHash.AnyoneCanPay);
-        }
-
-        private static void sign(Transaction tx, Dictionary<BitcoinSecret, List<RestApiUtxo_class>> utxosDic, long[] chageBacklist)
-        {
-            //集合保存交易输出
-            List<Coin> coinList = new List<Coin>();
-            int i = 0;
-            int j = 0 ;
-            Network networkFlag = null;
-            List<BitcoinSecret> privateKeys = new List<BitcoinSecret>();
-            foreach (KeyValuePair<BitcoinSecret, List<RestApiUtxo_class>> kvp in utxosDic)
-            {
-                BitcoinSecret privatekey = kvp.Key;
-                privateKeys.Add(privatekey);
-                networkFlag = privatekey.Network;
-                List<RestApiUtxo_class> utxos = kvp.Value;
-                Script scriptPubKey = privatekey.GetAddress(ScriptPubKeyType.Legacy).ScriptPubKey;
-                foreach (RestApiUtxo_class utxo in utxos)
-                    coinList.Add(new Coin(uint256.Parse(utxo.TxId), utxo.OutIndex, new Money(utxo.Value), scriptPubKey));
-                tx.Outputs.Last().Value = chageBacklist[i++];
-            }
-            Coin[] coins = coinList.ToArray();
-            BitcoinSecret[] privatearr = privateKeys.ToArray();
-            var txBuilder = networkFlag.CreateTransactionBuilder();//transactionbuilder对象
-            txBuilder.AddKeys(privatearr);
-            txBuilder.AddCoins(coins);
-            txBuilder.SignTransactionInPlace(tx, SigHash.Single | SigHash.AnyoneCanPay);
         }
     }
 }
